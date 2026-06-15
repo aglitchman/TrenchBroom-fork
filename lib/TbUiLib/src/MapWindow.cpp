@@ -25,6 +25,7 @@
 #include <QComboBox>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QMessageBox>
 #include <QMimeData>
@@ -88,6 +89,7 @@
 #include "ui/FaceTool.h"
 #include "ui/InfoPanel.h"
 #include "ui/Inspector.h"
+#include "ui/KeyboardShortcutUtils.h"
 #include "ui/LaunchGameEngineDialog.h"
 #include "ui/MapDocument.h"
 #include "ui/MapView2D.h"
@@ -379,6 +381,21 @@ void MapWindow::updateUndoRedoActions()
       m_redoAction->setEnabled(false);
     }
   }
+}
+
+bool MapWindow::tryTriggerShortcut(QKeyEvent* event)
+{
+  if (
+    (event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
+    == 0)
+  {
+    return false;
+  }
+
+  auto context = ActionExecutionContext{m_appController, this, currentMapViewBase()};
+
+  return triggerFallbackAction(
+    *event, context, m_actionMap | std::views::keys, [&](const auto&) { return false; });
 }
 
 void MapWindow::addRecentDocumentsMenu()
@@ -2629,6 +2646,12 @@ bool MapWindow::eventFilter(QObject* target, QEvent* event)
     || event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease)
   {
     m_lastInputTime = std::chrono::system_clock::now();
+    if (
+      event->type() == QEvent::KeyPress
+      && tryTriggerShortcut(static_cast<QKeyEvent*>(event)))
+    {
+      return true;
+    }
   }
   else if (event->type() == QEvent::ChildAdded)
   {
