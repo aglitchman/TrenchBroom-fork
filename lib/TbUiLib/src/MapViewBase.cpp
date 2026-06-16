@@ -22,7 +22,6 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDebug>
-#include <QKeyEvent>
 #include <QMenu>
 #include <QMimeData>
 #include <QShortcut>
@@ -80,7 +79,6 @@
 #include "ui/AppController.h"
 #include "ui/EnableDisableTagCallback.h"
 #include "ui/FlashSelectionAnimation.h"
-#include "ui/KeyboardShortcutUtils.h"
 #include "ui/MapDocument.h"
 #include "ui/MapViewActivationTracker.h"
 #include "ui/MapViewToolBox.h"
@@ -343,19 +341,6 @@ void MapViewBase::updateActionStates()
 void MapViewBase::updateActionStatesDelayed()
 {
   m_updateActionStatesSignalDelayer->queueSignal();
-}
-
-bool MapViewBase::tryTriggerShortcut(QKeyEvent* event)
-{
-  auto* mapWindow = dynamic_cast<MapWindow*>(window());
-  auto context = ActionExecutionContext{m_appController, mapWindow, this};
-
-  return triggerFallbackAction(
-    *event, context, m_shortcuts | std::views::values, [&](const auto& action) {
-      triggerAmbiguousAction(action.label());
-      event->accept();
-      return true;
-    });
 }
 
 void MapViewBase::triggerAction(const Action& action)
@@ -889,13 +874,6 @@ bool MapViewBase::event(QEvent* event)
   if (event->type() == QEvent::WindowDeactivate)
   {
     cancelMouseDrag();
-  }
-  else if (event->type() == QEvent::KeyPress)
-  {
-    if (tryTriggerShortcut(static_cast<QKeyEvent*>(event)))
-    {
-      return true;
-    }
   }
 
   return RenderView::event(event);

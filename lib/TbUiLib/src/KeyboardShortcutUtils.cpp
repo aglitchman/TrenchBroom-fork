@@ -23,8 +23,6 @@
 #include <QKeyEvent>
 #include <QKeySequence>
 
-#include "kd/reflection_impl.h"
-
 namespace tb::ui
 {
 namespace
@@ -87,33 +85,6 @@ bool matchesShortcut(
 bool eventMatchesPhysicalKey(const QKeyEvent& event, const QKeySequence& shortcut)
 {
   return matchesShortcut(event, shortcut, false, true);
-}
-
-bool eventMatchesPhysicalShortcutFallback(
-  const QKeyEvent& event, const QKeySequence& shortcut)
-{
-  return matchesShortcut(event, shortcut, true, true)
-         && !matchesShortcut(event, shortcut, true, false);
-}
-
-kdl_reflect_impl(NoFallbackActionMatch);
-
-std::ostream& operator<<(std::ostream& lhs, const UniqueFallbackActionMatch& rhs)
-{
-  return lhs << "UniqueFallbackActionMatch{action: " << rhs.action.label().toStdString()
-             << "}";
-}
-
-std::ostream& operator<<(std::ostream& lhs, const AmbiguousFallbackActionMatch& rhs)
-{
-  return lhs << "AmbiguousFallbackActionMatch{action: "
-             << rhs.action.label().toStdString() << "}";
-}
-
-std::ostream& operator<<(std::ostream& lhs, const FallbackActionMatch& rhs)
-{
-  std::visit([&](const auto& x) { lhs << x; }, rhs);
-  return lhs;
 }
 
 } // namespace tb::ui
